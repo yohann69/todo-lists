@@ -1,18 +1,45 @@
 import {FastifyReply, FastifyRequest} from "fastify";
 import {ITodoItem, ITodoList} from "../interfaces";
+import { redisClient } from "../db";
 
 // Simulated in-memory database
 const staticLists: ITodoList[] = [];
 
-export async function listLists(request: FastifyRequest, reply: FastifyReply) {
-    console.log('DB status', this.level.listsdb.status)
-    const listsIter = this.level.listsdb.iterator()
+export const listLists = async function (
+    request: FastifyRequest,
+    reply: FastifyReply
+){
+    const l = await redisClient().then(c => c.keys('*'))
 
-    const result: ITodoList[] = []
-    for await (const [key, value] of listsIter) {
-        result.push(JSON.parse(value))
+    const result: ITodoList[] = [];
+    for (const key of l) {
+        const value = await (await redisClient()).hGetAll(key)
+        if (value) {
+            const parsedValue = JSON.parse(JSON.stringify(value, null, 2))
+            result.push(parsedValue as ITodoList)
+        }
     }
     reply.send(result)
+}
+
+export const createList = async function (
+    request: FastifyRequest,
+    reply: FastifyReply
+){
+    const newList = request.body as ITodoList;
+
+    const redisObject = {
+        id: String(newList.id),
+        name: String(newList.name),
+        status: String(newList.status)
+    }
+
+    await redisClient()
+        .then( c => {
+            c.hSet(`todo-list:${newList.id}`, redisObject);
+        })
+
+    reply.send({ message: "List created" });
 }
 
 export async function addList(request: FastifyRequest, reply: FastifyReply) {
