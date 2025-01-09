@@ -1,6 +1,7 @@
 import fp from "fastify-plugin";
 import fastifySwagger from "@fastify/swagger";
 import fastifySwaggerUI from "@fastify/swagger-ui";
+import JsonSchemas from '../schemas/all.json'
 
 export default fp(async (fastify, opts) => {
     fastify.register(fastifySwagger, {
@@ -22,4 +23,20 @@ export default fp(async (fastify, opts) => {
         staticCSP: true,
         transformSpecificationClone: true,
     });
+
+    fastify.addSchema({
+        $id: 'ITodoList',
+        ...JsonSchemas.definitions.ITodoList
+    })
+
+    fastify.addSchema({
+        $id: 'IUser',
+        ...JsonSchemas.definitions.IUser
+    })
+
+    fastify.addSchema({
+        $id: 'ITodoItem',
+        ...JsonSchemas.definitions.ITodoItem
+    })
+
 });

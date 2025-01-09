@@ -1,0 +1,88 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "IUser": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "email"
+      ],
+      "additionalProperties": false
+    },
+    "ITodoItem": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "PENDING",
+            "IN-PROGRESS",
+            "DONE"
+          ]
+        },
+        "assignedTo": {
+          "$ref": "IUser#"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "status"
+      ],
+      "additionalProperties": false
+    },
+    "ITodoList": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "ITodoItem#"
+          }
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "IN-PROGRESS",
+            "DONE"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "items",
+        "status"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
