@@ -1,34 +1,35 @@
-import { FastifyReply, FastifyRequest } from "fastify";
-import { ITodoList, ITodoItem } from "../interfaces";
+import {FastifyReply, FastifyRequest} from "fastify";
+import {ITodoItem, ITodoList} from "../interfaces";
 
 // Simulated in-memory database
 const staticLists: ITodoList[] = [];
 
-export const listLists = async (request: FastifyRequest, reply: FastifyReply) => {
-    reply.send(staticLists);
-};
+export async function listLists(request: FastifyRequest, reply: FastifyReply) {
+    console.log('DB status', this.level.listsdb.status)
+    const listsIter = this.level.listsdb.iterator()
 
-export const addList = async (
-    request: FastifyRequest<{ Body: Omit<ITodoList, 'items' | 'status'> }>,
-    reply: FastifyReply
-) => {
-    const newList: ITodoList = {
-        ...request.body,
-        items: [],
-        status: 'IN-PROGRESS',
-    };
+    const result: ITodoList[] = []
+    for await (const [key, value] of listsIter) {
+        result.push(JSON.parse(value))
+    }
+    reply.send(result)
+}
 
-    staticLists.push(newList);
-    reply.status(201).send(newList);
-};
+export async function addList(request: FastifyRequest, reply: FastifyReply) {
+    const list = request.body as ITodoList
+    const result = await this.level.listsdb.put(
+        list.id.toString(), JSON.stringify(list)
+    )
+    reply.send(result)
+}
 
 export const updateList = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { id } = request.params as { id: string };
+    const {id} = request.params as { id: string };
     const updatedData = request.body as Partial<ITodoList>;
 
     const list = staticLists.find((l) => l.id === id);
     if (!list) {
-        reply.status(404).send({ error: 'List not found' });
+        reply.status(404).send({error: 'List not found'});
         return;
     }
 
@@ -37,12 +38,12 @@ export const updateList = async (request: FastifyRequest, reply: FastifyReply) =
 };
 
 export const addListItem = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { id } = request.params as { id: string };
+    const {id} = request.params as { id: string };
     const newItem: ITodoItem = request.body as ITodoItem;
 
     const list = staticLists.find((l) => l.id === id);
     if (!list) {
-        reply.status(404).send({ error: 'List not found' });
+        reply.status(404).send({error: 'List not found'});
         return;
     }
 
@@ -51,17 +52,17 @@ export const addListItem = async (request: FastifyRequest, reply: FastifyReply) 
 };
 
 export const deleteListItem = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { id, itemId } = request.params as { id: string; itemId: string };
+    const {id, itemId} = request.params as { id: string; itemId: string };
 
     const list = staticLists.find((l) => l.id === id);
     if (!list) {
-        reply.status(404).send({ error: 'List not found' });
+        reply.status(404).send({error: 'List not found'});
         return;
     }
 
     const itemIndex = list.items.findIndex((item) => item.id === itemId);
     if (itemIndex === -1) {
-        reply.status(404).send({ error: 'Item not found' });
+        reply.status(404).send({error: 'Item not found'});
         return;
     }
 
@@ -70,18 +71,18 @@ export const deleteListItem = async (request: FastifyRequest, reply: FastifyRepl
 };
 
 export const updateListItem = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { id, itemId } = request.params as { id: string; itemId: string };
+    const {id, itemId} = request.params as { id: string; itemId: string };
     const updatedData = request.body as Partial<ITodoItem>;
 
     const list = staticLists.find((l) => l.id === id);
     if (!list) {
-        reply.status(404).send({ error: 'List not found' });
+        reply.status(404).send({error: 'List not found'});
         return;
     }
 
     const item = list.items.find((i) => i.id === itemId);
     if (!item) {
-        reply.status(404).send({ error: 'Item not found' });
+        reply.status(404).send({error: 'Item not found'});
         return;
     }
 
@@ -90,11 +91,11 @@ export const updateListItem = async (request: FastifyRequest, reply: FastifyRepl
 };
 
 export const markListAsDone = async (request: FastifyRequest, reply: FastifyReply) => {
-    const { id } = request.params as { id: string };
+    const {id} = request.params as { id: string };
 
     const list = staticLists.find((l) => l.id === id);
     if (!list) {
-        reply.status(404).send({ error: 'List not found' });
+        reply.status(404).send({error: 'List not found'});
         return;
     }
 
